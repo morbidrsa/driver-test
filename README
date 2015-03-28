@@ -1,3 +1,9 @@
-This repository contains the code for my driver testing blog series
+This repository contains the code for my driver testing blog series.
+
+The test tool is inspired by the kdbus test suite [1] and the "driver" is
+roughly inspired by this linuxvoice article [2].
 
 Part 1: http://morbidrsa.blogspot.de/2015/03/testing-linux-drivers-part-i.html
+
+[1] https://github.com/gregkh/kdbus/blob/master/test/kdbus-test.c
+[2] http://www.linuxvoice.com/be-a-kernel-hacker/
