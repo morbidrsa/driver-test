@@ -85,6 +85,104 @@ out:
 	return ret;
 }
 
+static enum test_result test_nonblock_write_read(struct test_ctx __unused *ctx)
+{
+	int fd;
+	size_t len;
+	char *buf;
+	enum test_result ret;
+	int rc;
+	char *fixture = "This is a test\n";
+
+	len = strlen(fixture);
+
+	buf = malloc(len);
+	if (!buf) {
+		ret = TEST_ERROR;
+		goto out;
+	}
+
+	fd = open(DEVPATH, O_RDWR | O_NONBLOCK);
+	if (!fd) {
+		ret = TEST_ERROR;
+		goto out_free;
+	}
+
+	rc = write(fd, fixture, len);
+	if (rc < 0) {
+		ret = TEST_ERROR;
+		goto out_close;
+	}
+
+	rc = read(fd, buf, len);
+	if (rc < 0) {
+		ret = TEST_ERROR;
+		goto out_close;
+	}
+
+	rc = memcmp(buf, fixture, len);
+	if (rc) {
+		ret = TEST_FAIL;
+	} else {
+		ret = TEST_PASS;
+	}
+
+out_close:
+	close(fd);
+
+out_free:
+	free(buf);
+out:
+	return ret;
+}
+
+static enum test_result test_nonblock_read_write(struct test_ctx __unused *ctx)
+{
+	int fd;
+	size_t len;
+	char *buf;
+	int rc;
+	enum test_result ret;
+	char *fixture = "This is a test\n";
+
+	len = strlen(fixture);
+
+	buf = malloc(len);
+	if (!buf) {
+		ret = TEST_ERROR;
+		goto out;
+	}
+
+	fd = open(DEVPATH, O_RDWR | O_NONBLOCK);
+	if (!fd) {
+		ret = TEST_ERROR;
+		goto out_free;
+	}
+
+	rc = read(fd, buf, len);
+	if (rc < 0 && errno == EAGAIN) {
+		ret = TEST_PASS;
+		goto out_close;
+	}
+
+	/* If this code is reached, the test is failed */
+	ret = TEST_FAIL;
+
+	rc = write(fd, fixture, len);
+	if (rc < 0) {
+		ret = TEST_ERROR;
+		goto out_close;
+	}
+
+out_close:
+	close(fd);
+
+out_free:
+	free(buf);
+out:
+	return ret;
+}
+
 struct test_case {
 	char name[30];
 	char description[60];
@@ -99,6 +197,16 @@ struct test_case {
 		.name = "simple",
 		.description = "Simple open/write/read/close test cycle",
 		.test_fn = test_simple,
+	},
+	{
+		.name = "nonblock write - read",
+		.description = "Open/write/read/close test cycle with O_NONBLOCK",
+		.test_fn = test_nonblock_write_read,
+	},
+	{
+		.name = "nonblock read - write",
+		.description = "Open/read/write/close test cycle with O_NONBLOCK",
+		.test_fn = test_nonblock_read_write,
 	},
 };
 
