@@ -21,6 +21,19 @@ struct test_ctx {
 };
 
 /* ---------- Test cases ---------- */
+static enum test_result test_open_close(struct test_ctx __unused *ctx)
+{
+	int fd;
+
+	fd = open(DEVPATH, O_RDWR);
+	if (!fd)
+		return TEST_ERROR;
+
+	close(fd);
+
+	return TEST_PASS;
+}
+
 static enum test_result test_simple(struct test_ctx __unused *ctx)
 {
 	int fd;
@@ -71,12 +84,16 @@ out:
 	return ret;
 }
 
-
 struct test_case {
 	char name[20];
 	char description[60];
 	enum test_result (*test_fn)(struct test_ctx *ctx);
 } test_cases[] = {
+	{
+		.name = "open/close",
+		.description = "Simple open/close test cycle",
+		.test_fn = test_open_close,
+	},
 	{
 		.name = "simple",
 		.description = "Simple open/write/read/close test cycle",
@@ -85,7 +102,6 @@ struct test_case {
 };
 
 #define N_TESTS (sizeof(test_cases)/sizeof(test_cases[0]))
-
 
 static const char *print_result(enum test_result res)
 {
