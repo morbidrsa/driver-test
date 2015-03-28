@@ -40,6 +40,7 @@ static enum test_result test_simple(struct test_ctx __unused *ctx)
 	size_t len;
 	char *buf;
 	enum test_result ret;
+	int rc;
 	char *fixture = "This is a test\n";
 
 	len = strlen(fixture);
@@ -56,20 +57,20 @@ static enum test_result test_simple(struct test_ctx __unused *ctx)
 		goto out_free;
 	}
 
-	ret = write(fd, fixture, len);
-	if (ret < 0) {
+	rc = write(fd, fixture, len);
+	if (rc < 0) {
 		ret = TEST_ERROR;
 		goto out_close;
 	}
 
-	ret = read(fd, buf, len);
-	if (ret < 0) {
+	rc = read(fd, buf, len);
+	if (rc < 0) {
 		ret = TEST_ERROR;
 		goto out_close;
 	}
 
-	ret = memcmp(buf, fixture, len);
-	if (ret) {
+	rc = memcmp(buf, fixture, len);
+	if (rc) {
 		ret = TEST_FAIL;
 	} else {
 		ret = TEST_PASS;
@@ -85,7 +86,7 @@ out:
 }
 
 struct test_case {
-	char name[20];
+	char name[30];
 	char description[60];
 	enum test_result (*test_fn)(struct test_ctx *ctx);
 } test_cases[] = {
