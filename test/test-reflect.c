@@ -46,13 +46,13 @@ static enum test_result test_simple(struct test_ctx __unused *ctx)
 	ret = write(fd, fixture, len);
 	if (ret < 0) {
 		ret = TEST_ERROR;
-		goto out_free;
+		goto out_close;
 	}
 
 	ret = read(fd, buf, len);
 	if (ret < 0) {
 		ret = TEST_ERROR;
-		goto out_free;
+		goto out_close;
 	}
 
 	ret = memcmp(buf, fixture, len);
@@ -61,6 +61,9 @@ static enum test_result test_simple(struct test_ctx __unused *ctx)
 	} else {
 		ret = TEST_PASS;
 	}
+
+out_close:
+	close(fd);
 
 out_free:
 	free(buf);
