@@ -198,7 +198,7 @@ struct test_case {
 	enum test_result (*test_fn)(struct test_ctx *ctx);
 } test_cases[] = {
 	{
-		.name = "open/close",
+		.name = "open-close",
 		.description = "Simple open/close test cycle",
 		.test_fn = test_open_close,
 	},
@@ -208,12 +208,12 @@ struct test_case {
 		.test_fn = test_simple,
 	},
 	{
-		.name = "nonblock write - read",
+		.name = "nonblock-write-read",
 		.description = "Open/write/read/close test cycle with O_NONBLOCK",
 		.test_fn = test_nonblock_write_read,
 	},
 	{
-		.name = "nonblock read - write",
+		.name = "nonblock-read-write",
 		.description = "Open/read/write/close test cycle with O_NONBLOCK",
 		.test_fn = test_nonblock_read_write,
 	},
