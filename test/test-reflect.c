@@ -259,6 +259,49 @@ out:
 	return ret;
 }
 
+static enum test_result test_e2big(struct test_ctx __unused *ctx)
+{
+	int fd;
+	char *buf;
+	size_t len;
+	int rc;
+	enum test_result ret;
+
+	len = 4096;
+
+	buf = malloc(len);
+	if (!buf) {
+		ret = TEST_ERROR;
+		goto out;
+	}
+
+	memset(buf, 'A', len);
+
+	fd = open(DEVPATH, O_RDWR);
+	if (fd < 0) {
+		ret = TEST_ERROR;
+		goto out_free;
+	}
+
+	rc = write(fd, buf, len);
+	if (rc < 0 && errno == EFBIG) {
+		ret = TEST_PASS;
+		goto out_close;
+	} else if (rc < 0) {
+		ret = TEST_ERROR;
+		goto out_close;
+	}
+
+	ret = TEST_FAIL;
+
+out_close:
+	close(fd);
+out_free:
+	free(buf);
+out:
+	return ret;
+}
+
 struct test_case {
 	char name[30];
 	enum test_result (*test_fn)(struct test_ctx *ctx);
@@ -282,6 +325,10 @@ struct test_case {
 	{
 		.name = "nonblock-read-write",
 		.test_fn = test_nonblock_read_write,
+	},
+	{
+		.name = "test-e2big",
+		.test_fn = test_e2big,
 	},
 };
 
