@@ -30,19 +30,22 @@ struct test_ctx {
 };
 
 /* ---------- Test cases ---------- */
+
+/* Simple open/close test cycle */
 static enum test_result test_open_close(struct test_ctx __unused *ctx)
 {
 	int fd;
 
 	fd = open(DEVPATH, O_RDWR);
-	if (!fd)
-		return TEST_ERROR;
+	if (fd < 0)
+		return TEST_FAIL;
 
 	close(fd);
 
 	return TEST_PASS;
 }
 
+/* Simple open/write/read/close test cycle */
 static enum test_result test_simple(struct test_ctx __unused *ctx)
 {
 	int fd;
@@ -61,7 +64,7 @@ static enum test_result test_simple(struct test_ctx __unused *ctx)
 	}
 
 	fd = open(DEVPATH, O_RDWR);
-	if (!fd) {
+	if (fd < 0) {
 		ret = TEST_ERROR;
 		goto out_free;
 	}
@@ -94,6 +97,7 @@ out:
 	return ret;
 }
 
+/* Open/write/read/close test cycle with O_NONBLOCK */
 static enum test_result test_nonblock_write_read(struct test_ctx __unused *ctx)
 {
 	int fd;
@@ -112,7 +116,7 @@ static enum test_result test_nonblock_write_read(struct test_ctx __unused *ctx)
 	}
 
 	fd = open(DEVPATH, O_RDWR | O_NONBLOCK);
-	if (!fd) {
+	if (fd < 0) {
 		ret = TEST_ERROR;
 		goto out_free;
 	}
@@ -145,6 +149,7 @@ out:
 	return ret;
 }
 
+/* Open/read/write/close test cycle with O_NONBLOCK */
 static enum test_result test_nonblock_read_write(struct test_ctx __unused *ctx)
 {
 	int fd;
@@ -163,7 +168,7 @@ static enum test_result test_nonblock_read_write(struct test_ctx __unused *ctx)
 	}
 
 	fd = open(DEVPATH, O_RDWR | O_NONBLOCK);
-	if (!fd) {
+	if (fd < 0) {
 		ret = TEST_ERROR;
 		goto out_free;
 	}
@@ -194,27 +199,22 @@ out:
 
 struct test_case {
 	char name[30];
-	char description[60];
 	enum test_result (*test_fn)(struct test_ctx *ctx);
 } test_cases[] = {
 	{
 		.name = "open-close",
-		.description = "Simple open/close test cycle",
 		.test_fn = test_open_close,
 	},
 	{
 		.name = "simple",
-		.description = "Simple open/write/read/close test cycle",
 		.test_fn = test_simple,
 	},
 	{
 		.name = "nonblock-write-read",
-		.description = "Open/write/read/close test cycle with O_NONBLOCK",
 		.test_fn = test_nonblock_write_read,
 	},
 	{
 		.name = "nonblock-read-write",
-		.description = "Open/read/write/close test cycle with O_NONBLOCK",
 		.test_fn = test_nonblock_read_write,
 	},
 };
