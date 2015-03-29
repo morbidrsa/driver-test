@@ -13,6 +13,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <signal.h>
+#include <setjmp.h>
 
 #define __unused __attribute__((unused))
 
@@ -88,6 +90,66 @@ static enum test_result test_simple(struct test_ctx __unused *ctx)
 		ret = TEST_PASS;
 	}
 
+out_close:
+	close(fd);
+
+out_free:
+	free(buf);
+out:
+	return ret;
+}
+
+/* Test blocking code path */
+static jmp_buf jmpbuf;
+
+static void sig_alarm(int __unused signo)
+{
+	longjmp(jmpbuf, 1);
+}
+
+static enum test_result test_block(struct test_ctx __unused *ctx)
+{
+	int fd;
+	size_t len;
+	char *buf;
+	enum test_result ret;
+	int rc;
+	char *fixture = "This is a test\n";
+
+	len = strlen(fixture);
+
+	buf = malloc(len);
+	if (!buf) {
+		ret = TEST_ERROR;
+		goto out;
+	}
+
+	fd = open(DEVPATH, O_RDWR);
+	if (fd < 0) {
+		ret = TEST_ERROR;
+		goto out_free;
+	}
+
+	if (signal(SIGALRM, sig_alarm) == SIG_ERR) {
+		ret = TEST_ERROR;
+		goto out_close;
+	}
+
+	rc = setjmp(jmpbuf);
+	if (rc) {
+		ret = TEST_PASS;
+		goto out_close;
+	}
+
+	alarm(1);
+	rc = read(fd, buf, len);
+	if (rc < 0) {
+		ret = TEST_ERROR;
+		goto out_close;
+	}
+	alarm(0);
+
+	ret = TEST_FAIL;
 out_close:
 	close(fd);
 
@@ -208,6 +270,10 @@ struct test_case {
 	{
 		.name = "simple",
 		.test_fn = test_simple,
+	},
+	{
+		.name = "blocking-read",
+		.test_fn = test_block,
 	},
 	{
 		.name = "nonblock-write-read",
